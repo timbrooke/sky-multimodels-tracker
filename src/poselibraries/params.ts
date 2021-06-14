@@ -51,6 +51,7 @@ class Params {
     modelConfig: { scoreThreshold: 0.5 , type:"lightning", maxPoses: 1},
     model: SupportedModels.MoveNet,
   };
+
   BLAZEPOSE_CONFIG = {
     maxPoses: 1,
     scoreThreshold: 0.65,

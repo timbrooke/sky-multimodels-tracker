@@ -44,9 +44,6 @@ class PoseAnalysis {
   }
 
   async createDetector(): Promise<PoseDetector | null> {
-    // @ts-ignore
-    // @ts-ignore
-    // @ts-ignore
     switch (this._state.model) {
       case posedetection.SupportedModels.PoseNet:
         return posedetection.createDetector(this._state.model, {
@@ -72,7 +69,7 @@ class PoseAnalysis {
           });
         } else {
           // TODO Not sure what to do here???
-          // This possibility seemed left off
+          // This possibility seemed to have been missed
           return null;
         }
 
