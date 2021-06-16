@@ -32,8 +32,6 @@ export class Camera {
     const $size: { width: number; height: number } =
       params.VIDEO_SIZE[sizeOption];
 
-    console.log("$size", $size, params, params.VIDEO_SIZE);
-
     const videoConfig = {
       video: {
         facingMode: "user",
@@ -61,6 +59,9 @@ export class Camera {
     });
 
     camera._video.play();
+
+    // Hide the video element
+    camera._video.style.display = "none"
 
     const videoWidth = camera._video.videoWidth;
     const videoHeight = camera._video.videoHeight;

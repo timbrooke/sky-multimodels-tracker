@@ -6,36 +6,27 @@ import DatGui, {
   DatNumber,
   DatSelect,
 } from "react-dat-gui";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SupportedModels } from "@tensorflow-models/pose-detection";
+import OptionsManager from "./OptionsManager";
 
 const OptionsPanel = () => {
+  const optionManagerRef = useRef(new OptionsManager());
+
   const params = Params.getInstance();
   const modelOptions = ["Posenet", "Movenet", "Blazepose"];
-  const typeOptionsFull = [
-    ["None"],
-    ["lightning", "thunder"],
-    ["full", "lite", "heavy"],
-  ];
 
-  let typeOptions = typeOptionsFull[0];
+
+  let typeOptions =  ["lightning", "thunder"] // typeOptionsFull[0];
   let backendOptions = params.MODEL_BACKEND_MAP[SupportedModels.MoveNet];
   let webglOptions = ["1", "2"];
   let glFlushOptions = [0, 1, 2, -1, 0.25];
 
-  const [data, setData] = useState({
-    camera: {
-      targetFPS: 30,
-      sizeOption: "640 X 480",
-    },
-    backend: backendOptions[0],
-    flags: {},
-    modelConfig: { scoreThreshold: 0.5 },
-    model: "Movenet",
-  });
+  const [data, setData] = useState(optionManagerRef.current.optionSelection);
 
   function handleUpdate(updates: any) {
-    console.log(updates);
+    optionManagerRef.current.handleOptionsChanged(updates);
+    setData(updates);
   }
 
   return (

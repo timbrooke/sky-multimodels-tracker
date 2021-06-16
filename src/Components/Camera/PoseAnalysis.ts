@@ -7,6 +7,9 @@ import {
 } from "@tensorflow-models/pose-detection";
 import * as posedetection from "@tensorflow-models/pose-detection";
 
+import {Observable, Subject} from "rxjs";
+import { PoseStreamEvent } from "./types";
+
 class PoseAnalysis {
   private _state: ParamsState = {
     isModelChanged: false,
@@ -26,6 +29,8 @@ class PoseAnalysis {
     backend: "tfjs-webgl",
   };
 
+  private _dataStream: Subject<PoseStreamEvent> = new Subject();
+
   private readonly _video: HTMLVideoElement;
   private readonly _canvas: HTMLCanvasElement;
   private _detector: PoseDetector | null = null;
@@ -40,7 +45,7 @@ class PoseAnalysis {
   constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
     this._video = video;
     this._canvas = canvas;
-    this.app();
+    this.initialize();
   }
 
   async createDetector(): Promise<PoseDetector | null> {
@@ -131,6 +136,8 @@ class PoseAnalysis {
 
     this.endEstimatePosesStats();
 
+    this._dataStream.next({ poses: poses, modelName: "movenet" });
+
     this._camera.drawCtx();
 
     // The null check makes sure the UI is not in the middle of changing to a
@@ -151,7 +158,7 @@ class PoseAnalysis {
     this._rafId = requestAnimationFrame(this.renderPrediction.bind(this));
   }
 
-  async app() {
+  async initialize() {
     this._camera = await Camera.initCamera(
       this._video,
       this._canvas,
@@ -161,12 +168,17 @@ class PoseAnalysis {
     await setBackendAndEnvFlags(this._state.flags, this._state.backend);
 
     this._detector = await this.createDetector();
+
     if (this._detector === null) {
       console.log("DISASTER IT FELL THROUGH THE CRACKS");
       return;
     }
 
     this.renderPrediction();
+  }
+
+  get poseDataStream():Observable<PoseStreamEvent>{
+    return this._dataStream as Observable<PoseStreamEvent>
   }
 }
 
