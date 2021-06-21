@@ -2,8 +2,16 @@
 
 import { Observable } from "rxjs";
 import { PoseStreamEvent } from "../Components/Camera/types";
-import { map, scan, filter } from "rxjs/operators";
+import {
+  map,
+  scan,
+  filter,
+  distinctUntilChanged,
+  debounce,
+  debounceTime,
+} from "rxjs/operators";
 import { Keypoint } from "@tensorflow-models/pose-detection";
+import { get } from "lodash";
 
 export type TimedKeypoint = {
   t: number;
@@ -80,6 +88,59 @@ class Dynamics {
         return acc;
       }, [])
     );
+  }
+
+  public static detectSwipe(stream: Observable<PoseStreamEvent>) {
+    const maxTimeWindow = 600;
+    const str2 = Dynamics.extractKeypointsWithNames(["right_wrist"], stream);
+    const str3 = str2.pipe(
+      filter((data) => {
+        const score = get(data, "keypoints[0].score", 0);
+        return score > 0.5;
+      })
+    );
+    const str4 = Dynamics.accumulatePts(300, str3);
+    const str5: Observable<null | number> = str4.pipe(
+      map((data) => {
+        if (data.length < 2) {
+          return null;
+        }
+
+        let minX = 9000;
+        let maxX = -9000;
+        let minT = 0;
+        let maxT = 0;
+        for (let i = 0; i < data.length; i++) {
+          const x = data[i].keypoints[0].x;
+          const t = data[i].t;
+          if (x < minX) {
+            minX = x;
+            minT = t;
+          }
+          if (x > maxX) {
+            maxX = x;
+            maxT = t;
+          }
+        }
+
+        if (maxT === minT) return null;
+        return (maxX - minX) / (minT - maxT);
+      })
+    );
+    const threshold = 0.70;
+    const str6 = str5.pipe(
+      map((v) => {
+        const t = new Date().getTime();
+        if (v === null) return { action: "no swipe", t };
+        if (v < -threshold) return { action: "swipe -", t };
+        if (v > threshold) return { action: "swipe +", t };
+        return { action: "no swipe", t };
+      }),
+      distinctUntilChanged((a, b) => a.action === b.action),
+      filter((v) => v.action !== "no swipe"),
+      debounceTime(500)
+    );
+    return str6;
   }
 
   public static calculateVelocities(

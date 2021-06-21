@@ -25,7 +25,7 @@ class PoseAnalysis {
       WEBGL_RENDER_FLOAT32_CAPABLE: true,
       WEBGL_FLUSH_THRESHOLD: -1,
     },
-    modelConfig: { scoreThreshold: 0.5, type: "lightning", maxPoses: 1 },
+    modelConfig: { scoreThreshold: 0.5, type: "thunder", maxPoses: 1 },
     backend: "tfjs-webgl",
   };
 
